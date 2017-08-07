@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springmvc.test.inter.IUserModelOperation">
+    <!-- namespace为该接口文件。 id这里对应接口文件中的方法。paramterType对应传过来的参数。 -->
+    <select id="selectUserById" parameterType="int" resultType="User">
+        SELECT * from user WHERE id=#{id}
+    </select>
+    <!-- 返回列表则需要配置 resultMap  List<User> -->
+    <resultMap id="resultListUser" type="User">
+        <id column="id" property="id"></id>
+        <!-- column 这里不区分大小写 -->
+        <result column="name" property="name"/>
+        <result column="sex" property="sex"/>
+        <result column="address" property="address"/>
+    </resultMap>
+    <!-- 请求方法为 selectAllUser  请求参数类型为  string  返回结果 resultMap -->
+    <select id="selectAllUser" parameterType="string" resultMap="resultListUser">
+        select * from user
+    </select>
+    <!-- 参数类型为 User 。 #{name}是参数中对应的属性值.  userGeneratedKeys=true -->
+    <!-- 表明要MyBatis获取由数据库自动生成的主键. keyProperty=id 指定把获取到的主键值注入到User的id属性 -->
+    <insert id="addUser" parameterType="User" useGeneratedKeys="true" keyProperty="id">
+        insert into user(name,sex,address) values(#{name},#{sex},#{address})
+    </insert>
+    <!-- update和delete根据捕获异常来判断是否运行成功 -->
+    <update id="updateUser" parameterType="User">
+        update user set name=#{name},sex=#{sex},address=#{address} where id=#{id}
+    </update>
+
+    <delete id="deleteUserById" parameterType="int">
+        delete from user where id=#{id}
+    </delete>
+
+
+</mapper>

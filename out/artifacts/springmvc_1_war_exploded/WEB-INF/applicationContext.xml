@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-4.0.xsd
+       http://www.springframework.org/schema/mvc
+       http://www.springframework.org/schema/mvc/spring-mvc.xsd" >
+    <!-- 加载数据库配置文件，改配置文件是数据库的信息。保存方式为key-value -->
+    <context:property-placeholder location="classpath:database.properties"/>
+    <!-- 读取配置文件的另一种方式 -->
+    <!--
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="location" value="classpath:database.properties"/>
+    </bean>
+    -->
+<!-- ?useSSL=true -->
+    <!-- 数据库配置信息 这种数据库连接没有使用连接池，故在项目中很少用-->
+    <!-- 简单的数据源实现类 -->
+    <bean id="dataSource1" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="${jdbc.driverClassName}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+    <!-- dbcp的数据库使用了连接池，用的比较多 ,这里可以指定关闭方法 destroy-method -->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driverClassName}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <!-- 设置从数据源中返回的连接是否采用自动提交机制，默认值为 true -->
+        <property name="defaultAutoCommit" value="true"/>
+        <!-- 设置数据源是否仅能执行只读操作， 默认值为 false -->
+        <property name="defaultReadOnly" value="false"/>
+        <!-- 最大连接数据库连接数，设置为0时，表示无连接。测试：当为0时，无法得到数据库连接 -->
+        <property name="maxActive" value="200"/>
+        <!-- 最大等待连接中的数量，设置为0时，表示没有限制。测试：当为0时，可以获得连接。疑点：当多个请求时，是否还能请求。 -->
+        <property name="maxIdle" value="2"/>
+        <!-- 最大等待秒数，单位为毫秒， 超过时间会报出错误信息. 测试：当无法获得请求时，等待多少毫秒报出错误 -->
+        <property name="maxWait" value="3000"/>
+        <!-- 用于验证连接是否成功的查询SQL语句，SQL语句必须至少要返回一行数据， 如你可以简单地设置为：“select count(*) from user” -->
+        <property name="validationQuery" value="select count(*) from user"/>
+        <!-- 是否自我中断，默认是 false  -->
+        <property name="removeAbandoned" value="false"/>
+        <!-- 几秒后数据连接会自动断开，在removeAbandoned为true，提供该值 -->
+        <property name="removeAbandonedTimeout" value="1000"/>
+        <!-- 是否记录中断事件， 默认为 false -->
+        <property name="logAbandoned" value="true"/>
+    </bean>
+<!--
+    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://127.0.0.1:3306/new_schema?characterEncoding=utf8&amp;serverTimezone=GMT"/>
+        <property name="username" value="root"/>
+        <property name="password" value="gaofeng2017"/>
+    </bean>
+-->
+    <!-- 事务管理器 访问数据库时提供对事务的管理 -->
+    <!-- 为事务管理器指定的 DataSource 必须和用来创建 SqlSessionFactoryBean 的 是同一个数据源,否则事务管理器就无法工作了 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <!-- 如果mybatis 中已经配置mappers，这里就可以不设置mapperLocations -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 属性指定mybatis的核心配置文件 -->
+        <property name="configLocation" value="classpath:mybatis-config.xml"/>
+        <property name="mapperLocations" value="classpath:com/springmvc/test/model/*.xml"/>
+        <!-- 这里也可以定义其他的事务管理器 -->
+        <!--
+        <property name="transactionFactory">
+            <bean class="org.apache.ibatis.transaction.managed.ManagedTransactionFactory"/>
+        </property>
+        -->
+    </bean>
+
+    <!-- 定义mapper 注册mapper ++ 根据指定的Mapper接口生成Bean实例-->
+    <bean id="userMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+        <!-- 要返回Mapper对象的Mapper接口 -->
+        <property name="mapperInterface" value="com.springmvc.test.mapper.PeopleMapper"/>
+
+        <!-- SqlSessionFactoryBean对象，用于提供SqlSession -->
+        <property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+<!--
+
+        <property name="">
+            <set>
+                <value></value>
+                <ref bean=""></ref>
+            </set>
+            <map>
+                <entry key="">
+                    <value></value>
+                    <ref bean=""></ref>
+                </entry>
+            </map>
+        </property>
+-->
+
+    </bean>
+<!--
+    <bean id="userModel" class="org.mybatis.spring.mapper.MapperFactoryBean">
+        &lt;!&ndash; 要返回Mapper对象的Mapper接口 &ndash;&gt;
+        <property name="mapperInterface" value="com.springmvc.test.inter.IUserModelOperation"/>
+        &lt;!&ndash; SqlSessionFactoryBean对象，用于提供SqlSession &ndash;&gt;
+        <property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+    </bean>
+ -->
+
+    <!-- 这个扫描是对接口的实现，跟springmvc的扫描不一样 -->
+    <!-- 如果使用了下面的代码，则上面的注册接口可以不用去注册。下面的代码回自动记载所有的接口。scanner:扫描 -->
+    <!-- 加载连接数据库的接口。这里必须是接口 ++ 根据指定包批量扫描Mapper接口并生成实例-->
+    <!-- MapperScannerConfigurer组件，通过这个组件可以自动扫描指定包下的各个Mapper接口，并注册对应的MapperFactoryBean对象 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.springmvc.test.inter"/>
+        <!-- 原本需要配置这个参数，新版本可能自动获取，不需要配置 -->
+        <!-- 上面sqlSessionFactory属性也可以不用指定，默认会以Autowired方式注入 -->
+        <!--
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+        -->
+        <!-- 只要Mapper类前面加上@MyBatisRepository 这个自己指定的注解就OK -->
+    </bean>
+
+<!--
+
+    <bean id="peopleManagerImple" class="com.springmvc.test.service.imple.PeopleManagerImple">
+        <property name="iUserModelOperation" ref="userModelOperation"/>
+    </bean>
+
+    <bean id="peopleDaoImple" class="com.springmvc.test.dao.imple.PeopleDaoImple">
+        <property name="iUserModelOperation" ref="userModelOperation"/>
+    </bean>
+-->
+
+</beans>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd" >
+<configuration>
+    <!-- 该文件只处理了对应关系  -->
+    <typeAliases>
+        <typeAlias alias="User" type="com.springmvc.test.model.UserModel"/>
+        <typeAlias alias="People" type="com.springmvc.test.model.PeopleModel"/>
+    </typeAliases>
+
+    <!-- 这部分测试用.貌似Spring中不会去识别这部分 -->
+
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"></transactionManager>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.cj.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://127.0.0.1:3306/new_schema?characterEncoding=utf8"/>
+                <property name="username" value="root"/>
+                <property name="password" value="gaofeng2017"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <!-- 这里交给sqlSessionFactory处理
+    <mappers>
+        <mapper resource="com/springmvc/test/model/UserXml.xml"/>
+    </mappers>
+    -->
+</configuration>
